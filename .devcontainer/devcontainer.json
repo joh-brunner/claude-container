@@ -1,0 +1,48 @@
+{
+  "name": "safe-agent-workspace",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+      "CLAUDE_CODE_VERSION": "latest",
+      "CODEX_VERSION": "latest",
+      "TZ": "Europe/Berlin",
+      "SANDBOX_FAIL_CLOSED": "true"
+    }
+  },
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW",
+    "--memory=8g",
+    "--pids-limit=4096",
+    "--hostname=agent-sandbox"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=agent-claude-config-${devcontainerId},target=/home/node/.claude,type=volume",
+    "source=agent-codex-config-${devcontainerId},target=/home/node/.codex,type=volume",
+    "source=agent-history-${devcontainerId},target=/commandhistory,type=volume"
+  ],
+  "remoteUser": "node",
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "CODEX_HOME": "/home/node/.codex",
+    "ALLOW_HOST_NETWORK": "false"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "openai.chatgpt"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "telemetry.telemetryLevel": "off"
+      }
+    }
+  },
+  "postCreateCommand": "bash /workspace/.devcontainer/post-create.sh",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand"
+}

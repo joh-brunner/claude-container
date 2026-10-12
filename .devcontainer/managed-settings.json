@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(su *)",
+      "Read(~/.codex/auth.json)",
+      "Read(~/.claude/.credentials.json)",
+      "Edit(//etc/**)",
+      "Edit(//usr/**)",
+      "Edit(~/**)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "enableWeakerNestedSandbox": true,
+    "filesystem": {
+      "denyRead": [
+        "/home/node"
+      ],
+      "allowRead": [
+        "/workspace",
+        "/home/node/.gitconfig"
+      ]
+    },
+    "network": {
+      "strictAllowlist": true
+    }
+  }
+}
