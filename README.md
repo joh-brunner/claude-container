@@ -12,9 +12,6 @@ What you get:
   - block writes outside the repo
   - ask before reads outside the repo
   - protect the guard rails themselves from being edited by Claude
-- **Six subagents**: `planner`, `implementer`, `test-engineer`, `code-reviewer`,
-  `security-auditor`, and `debugger`.
-- **A `cross-review` skill** that combines Claude's reviewers with a Codex (GPT) review.
 - **Codex plugin preconfigured.** Claude Code offers to install it when you trust the folder.
 - **Scripts**: `check-setup.sh` verifies everything, `test-guard.py` tests the hook,
   and `new-project.sh` starts a new project from this template.
@@ -105,7 +102,6 @@ Every line should show `[ok]`. Inside Claude Code, also run:
 - `/sandbox`: the Config tab shows the resolved sandbox and whether it is active.
 - `/permissions`: shows the allow, ask, and deny rules.
 - `/hooks`: shows the guard hook.
-- `/agents`: shows the six subagents.
 
 Then run a quick live test by asking Claude:
 
@@ -120,10 +116,7 @@ You should see a **prompt** for the install, a **block** for the write, and a
 
 | Task | How |
 |---|---|
-| Plan a feature | "Use the planner to plan X" |
-| Implement | "Implement the plan with the implementer, then have test-engineer add tests" |
-| Debug | "Use the debugger on the failing test" |
-| Review with both models | "Run cross-review", or `/codex:review` and `/codex:adversarial-review` |
+| Get a Codex review | `/codex:review` or `/codex:adversarial-review` |
 | Hand work to Codex | `/codex:rescue <task>`, with `/codex:status`, `/codex:result`, and `/codex:cancel` to manage it |
 | Continue in Codex | `/codex:transfer` |
 
@@ -154,7 +147,6 @@ Then edit the "Project notes" section of `CLAUDE.md` with the stack and commands
 | Fewer Bash prompts | Set `"autoAllowBashIfSandboxed": true` in `.claude/settings.local.json`. Sandboxed commands then run without prompts, while installs, outside reads, and blocked writes still get stopped by the hook | Restart `claude` |
 | Add a language toolchain (Go, Rust, ...) | Add it to the `Dockerfile` | Rebuild container |
 | Change the Codex model | `~/.codex/config.toml` inside the container | Next Codex call |
-| Add or modify an agent | `.claude/agents/*.md` | `/agents` |
 
 ## Running without the container (host mode)
 

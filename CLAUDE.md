@@ -19,11 +19,11 @@ container, the Claude Code sandbox, permission rules, and a PreToolUse hook
   effect. Explain what was blocked and ask the user.
 
 ## Workflow
-- Non-trivial tasks: use the `planner` subagent first and show the plan.
-- Implement in small steps (`implementer`), add tests (`test-engineer`).
-- Before committing significant changes, run the `cross-review` skill
-  (Claude reviewers + Codex review via the Codex plugin).
-- Use `debugger` for failing tests before guessing at fixes.
+- Non-trivial tasks: make a plan first and show it before editing.
+- Implement in small steps and add tests for every behaviour change.
+- Before committing significant changes, get a second opinion with
+  `/codex:review` (Codex review via the Codex plugin).
+- For failing tests, find the root cause before guessing at fixes.
 - Keep commits small with clear messages. Never push; the user pushes.
 
 ## Project notes
