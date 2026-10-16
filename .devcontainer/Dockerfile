@@ -1,7 +1,6 @@
 FROM node:22-bookworm
 
 ARG CLAUDE_CODE_VERSION=latest
-ARG CODEX_VERSION=latest
 ARG TZ=Europe/Berlin
 ARG SANDBOX_FAIL_CLOSED=true
 ENV TZ=${TZ}
@@ -18,21 +17,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --- Agent CLIs, installed globally as root => read-only for the agent user ---
 RUN npm install -g \
       "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
-      "@openai/codex@${CODEX_VERSION}" \
       "@anthropic-ai/sandbox-runtime" \
     && npm cache clean --force
 
 # --- Directories owned by the agent user (volumes are mounted on top) ---
-RUN mkdir -p /home/node/.claude /home/node/.codex /commandhistory /workspace \
-    && chown -R node:node /home/node/.claude /home/node/.codex /commandhistory /workspace
+RUN mkdir -p /home/node/.claude /commandhistory /workspace \
+    && chown -R node:node /home/node/.claude /commandhistory /workspace
 
 # --- Firewall + locked policy files (root-owned, agent can read but not change) ---
 COPY init-firewall.sh /usr/local/bin/init-firewall.sh
 COPY allowed-domains.txt /etc/sandbox/allowed-domains.txt
 COPY managed-settings.json /etc/claude-code/managed-settings.json
-COPY codex-config.toml /etc/sandbox/codex-config.toml
 RUN chmod 0755 /usr/local/bin/init-firewall.sh \
-    && chmod 0644 /etc/sandbox/allowed-domains.txt /etc/claude-code/managed-settings.json /etc/sandbox/codex-config.toml \
+    && chmod 0644 /etc/sandbox/allowed-domains.txt /etc/claude-code/managed-settings.json \
     && if [ "${SANDBOX_FAIL_CLOSED}" != "true" ]; then \
          tmp=$(mktemp) && jq '.sandbox.failIfUnavailable=false' /etc/claude-code/managed-settings.json > "$tmp" \
          && mv "$tmp" /etc/claude-code/managed-settings.json && chmod 0644 /etc/claude-code/managed-settings.json; \
@@ -45,7 +42,6 @@ USER node
 
 # Caches live inside the repo (gitignored), so the sandbox never needs to write to $HOME
 ENV CLAUDE_CONFIG_DIR=/home/node/.claude \
-    CODEX_HOME=/home/node/.codex \
     DISABLE_AUTOUPDATER=1 \
     XDG_CACHE_HOME=/workspace/.cache \
     npm_config_cache=/workspace/.cache/npm \

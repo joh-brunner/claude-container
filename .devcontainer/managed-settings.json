@@ -5,7 +5,6 @@
     "deny": [
       "Bash(sudo *)",
       "Bash(su *)",
-      "Read(~/.codex/auth.json)",
       "Read(~/.claude/.credentials.json)",
       "Edit(//etc/**)",
       "Edit(//usr/**)",

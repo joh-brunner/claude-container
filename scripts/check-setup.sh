@@ -8,7 +8,6 @@ cd "$(dirname "$0")/.."
 
 echo "Tools"
 command -v claude >/dev/null && pass "claude $(claude --version 2>/dev/null | head -1)" || fail "claude not found"
-command -v codex  >/dev/null && pass "codex $(codex --version 2>/dev/null | head -1)"   || fail "codex not found"
 command -v bwrap  >/dev/null && pass "bubblewrap present" || fail "bubblewrap missing (sandbox cannot start)"
 command -v socat  >/dev/null && pass "socat present"      || fail "socat missing"
 
@@ -22,7 +21,6 @@ python3 -m json.tool .claude/settings.json >/dev/null && pass ".claude/settings.
 echo "Network"
 if curl --connect-timeout 5 -s https://example.com >/dev/null 2>&1; then fail "example.com reachable (firewall off?)"; else pass "example.com blocked"; fi
 curl --connect-timeout 8 -s -o /dev/null https://api.anthropic.com && pass "api.anthropic.com reachable" || fail "api.anthropic.com blocked"
-curl --connect-timeout 8 -s -o /dev/null https://api.openai.com && pass "api.openai.com reachable" || fail "api.openai.com blocked"
 
 echo "Filesystem"
 touch /home/node/.write-test 2>/dev/null && { rm -f /home/node/.write-test; echo "  [info] \$HOME writable by you (expected; Claude's sandbox still blocks it)"; }
@@ -30,9 +28,6 @@ touch /etc/write-test 2>/dev/null && fail "/etc writable" || pass "/etc not writ
 
 echo "Guard hook"
 python3 scripts/test-guard.py >"${TMPDIR:-/tmp}/guard-test.log" 2>&1 && pass "guard tests: $(tail -1 "${TMPDIR:-/tmp}/guard-test.log")" || { fail "guard tests failed (see "${TMPDIR:-/tmp}/guard-test.log")"; }
-
-echo "Logins (informational)"
-codex login status >/dev/null 2>&1 && pass "codex logged in" || echo "  [todo] run: codex login --device-auth"
 
 echo
 [ "$FAILED" = 0 ] && echo "All checks passed." || { echo "Some checks failed."; exit 1; }

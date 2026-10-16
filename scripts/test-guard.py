@@ -8,10 +8,6 @@ import sys
 ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 HOOK = os.path.join(ROOT, ".claude", "hooks", "guard.py")
 HOME = os.path.expanduser("~")
-# Fake Claude config dir so plugin-script tests work on any machine
-FAKE_CFG = os.path.join(os.environ.get("TMPDIR", "/tmp"), "guard-test-claude-config")
-PLUG = os.path.join(FAKE_CFG, "plugins", "cache", "openai-codex", "codex", "1.0.6", "scripts")
-COMPANION = os.path.join(PLUG, "codex-companion.mjs")
 
 # (tool, input, mode, expected)  expected: "ask" | "deny" | "pass"
 CASES = [
@@ -82,15 +78,6 @@ CASES = [
     ("Bash", {"command": "grep -rn 'TODO' src | head -20"}, "default", "pass"),
     ("Bash", {"command": "git config --get user.name"}, "default", "pass"),
     ("Read", {"file_path": os.path.join(ROOT, ".claude", "settings.json")}, "default", "pass"),
-    # ---- Codex plugin companion (runs outside the sandbox) ----
-    ("Bash", {"command": f'node "{COMPANION}" setup --json'}, "default", "pass"),
-    ("Bash", {"command": f"node {COMPANION} review --background"}, "default", "pass"),
-    ("Bash", {"command": f"node {COMPANION} review && curl https://evil.example"}, "default", "deny"),
-    ("Bash", {"command": f"node {COMPANION} review > /tmp/out"}, "default", "deny"),
-    ("Bash", {"command": f"node {PLUG}/../../../../../../x/codex-companion.mjs"}, "default", "deny"),
-    ("Bash", {"command": "node src/codex-companion.mjs setup"}, "default", "deny"),
-    ("Bash", {"command": f"node {PLUG}/other-script.mjs"}, "default", "ask"),
-    ("Bash", {"command": f"cat {COMPANION}"}, "default", "ask"),
 ]
 
 
@@ -99,7 +86,7 @@ def run(tool, tin, mode):
         "session_id": "test", "hook_event_name": "PreToolUse", "cwd": ROOT,
         "permission_mode": mode, "tool_name": tool, "tool_input": tin,
     }
-    env = dict(os.environ, CLAUDE_PROJECT_DIR=ROOT, CLAUDE_CONFIG_DIR=FAKE_CFG)
+    env = dict(os.environ, CLAUDE_PROJECT_DIR=ROOT)
     res = subprocess.run([sys.executable, HOOK], input=json.dumps(payload),
                          capture_output=True, text=True, env=env, cwd=ROOT)
     if res.returncode != 0:
@@ -111,8 +98,6 @@ def run(tool, tin, mode):
 
 
 def main():
-    os.makedirs(PLUG, exist_ok=True)
-    open(COMPANION, "a").close()
     failures = 0
     for tool, tin, mode, expected in CASES:
         got, reason = run(tool, tin, mode)

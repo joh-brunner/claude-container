@@ -44,8 +44,8 @@ action has to get past all of them.
   the script runs inside the sandbox and container, with no access to your host home directory.
 - **Agent mistakes** (`rm -rf` in the wrong place): the host filesystem is not mounted,
   and `rm` always asks.
-- **Credential theft:** host credentials are not in the container. Claude and Codex logins
-  are in volumes that sandboxed Bash can't read. API-key environment variables are
+- **Credential theft:** host credentials are not in the container. The Claude login
+  is in a volume that sandboxed Bash can't read. API-key environment variables are
   stripped from sandboxed commands.
 
 ## Known limitations (read these)
@@ -53,45 +53,34 @@ action has to get past all of them.
 1. **The guard hook is heuristic.** It parses shell commands, but can't see inside
    `python -c "..."`, scripts, or deliberately obfuscated commands. The sandbox and
    container are the real boundaries; the hook provides clear prompts and early blocks.
-2. **Allowed domains are exfiltration paths.** `github.com` is allowed for the plugin
-   marketplace, and GitHub can host arbitrary content. The sandbox's Bash allowlist
-   excludes GitHub. To tighten further, remove the GitHub entries from
-   `allowed-domains.txt` after the Codex plugin is installed (it is cached in the volume).
+2. **Allowed domains are exfiltration paths.** Keep `allowed-domains.txt` short.
    The firewall resolves domains to IPs at start, so CDN-hosted domains may share
    IPs with other sites.
 3. **`enableWeakerNestedSandbox`** is on inside the container, because bubblewrap
    can't create a full sandbox in an unprivileged container. This weakens the inner
    sandbox, so the container is the primary boundary there.
-4. **Codex runs outside Claude's sandbox** because it needs its own credentials and
-   network. Two things are excluded: `codex *`, and the Codex plugin's
-   `node .../plugins/cache/.../codex-companion.mjs` script. The guard hook only lets the
-   companion run as a single plain `node` command whose script really resolves inside
-   the Claude plugin cache (no `..`, no chaining, no redirects). The same name elsewhere is denied. It is still bounded by the container, the
-   firewall, and Codex's own `workspace-write` sandbox with the workspace marked `trust_level = "untrusted"`.
-   Codex's own sandbox may not fully work inside Docker. In that case, the container and firewall remain.
-5. **You can override everything.** Commands you type yourself (in a terminal, or with
+4. **You can override everything.** Commands you type yourself (in a terminal, or with
    `!` in Claude Code) aren't subject to Claude's permission rules. Settings you add
    in `.claude/settings.local.json` can widen `allow` lists and excluded commands.
-6. **MCP servers and plugins run with real access.** Only add ones you trust. Adding them
+5. **MCP servers and plugins run with real access.** Only add ones you trust. Adding them
    via the CLI is gated by the hook, but installing through the `/plugin` UI is your
    own action.
-7. **Auto mode** (default for new sessions on some plans since August 2026) replaces
+6. **Auto mode** (default for new sessions on some plans since August 2026) replaces
    prompts with a classifier. This repo sets `defaultMode: "default"`. If you switch to
    auto mode anyway, the hook blocks installs and outside reads rather than silently allowing them.
-8. **VS Code itself** has access to the container and can forward ports, credentials, and
+7. **VS Code itself** has access to the container and can forward ports, credentials, and
    SSH agents. Use the host settings in the README to limit credential forwarding.
 
 ## Optional extra hardening
 
 - Set `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1` (in `devcontainer.json` → `containerEnv`)
   to strip credentials from **all** subprocesses and force shell-mode commands into
-  the sandbox too. Test that `/codex:*` still works afterwards.
-- Remove the GitHub domains from the firewall once the plugin is installed.
-- Pin `CLAUDE_CODE_VERSION` and `CODEX_VERSION` in `devcontainer.json` to known-good
+  the sandbox too.
+- Pin `CLAUDE_CODE_VERSION` in `devcontainer.json` to known-good
   versions, and update deliberately. Auto-update is disabled in the container.
 - Run a secret scanner (for example gitleaks) as a git pre-commit hook. You'd need
   to install it yourself in the Dockerfile.
 - Use a separate Docker context or VM (for example Docker Desktop with enhanced
   container isolation) for untrusted repositories.
 - For company code, confirm data-handling terms (training opt-out, retention, GDPR)
-  for both Anthropic and OpenAI before connecting real repositories.
+  with Anthropic before connecting real repositories.

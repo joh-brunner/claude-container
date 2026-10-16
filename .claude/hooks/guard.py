@@ -245,7 +245,6 @@ def detect_install(cmd: str, args: list[str]) -> str | None:
          f"container image pull/run ({cmd})"),
         (cmd == "claude" and sub in {"mcp", "plugin", "plugins", "install", "update", "migrate-installer"},
          "Claude Code plugin/MCP/self install"),
-        (cmd == "codex" and sub in {"mcp", "plugin", "plugins", "update"}, "Codex MCP/plugin change"),
         (cmd in {"code", "code-insiders", "cursor"} and "--install-extension" in args, "editor extension install"),
     ]
     for matched, label in rules:
@@ -254,47 +253,9 @@ def detect_install(cmd: str, args: list[str]) -> str | None:
     return None
 
 
-def plugins_root() -> str:
-    config_dir = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
-    return os.path.join(os.path.realpath(config_dir), "plugins")
-
-
-def check_plugin_scripts(tokens: list[str], segments: list[dict], cwd: str, mode: str) -> set[str]:
-    """
-    Commands that run a script from the Claude plugin cache are excluded from the
-    sandbox (the Codex companion needs ~/.codex and network). Only allow that for
-    a single, plain `node <plugins>/.../codex-companion.mjs ...` command.
-    Returns the set of tokens that were validated as trusted plugin scripts.
-    """
-    root = plugins_root()
-    trusted: set[str] = set()
-    plugin_tokens = [t for t in tokens if "/plugins/" in t or t.endswith("codex-companion.mjs")]
-    if not plugin_tokens:
-        return trusted
-    for tok in plugin_tokens:
-        if ".." in tok.split("/"):
-            emit("deny", "Plugin script paths containing '..' are not allowed.")
-        resolved = resolve(tok, cwd)
-        if not is_inside(resolved, root):
-            if tok.endswith("codex-companion.mjs"):
-                emit("deny", "Only the Codex companion from the Claude plugin cache may run outside the sandbox; "
-                             f"{resolved} is not in {root}.")
-            continue
-        if len(segments) != 1 or any(t in REDIRECT_OPERATORS for t in tokens):
-            emit("deny", "Plugin scripts must run as a single command without chaining, pipes, or redirects.")
-        cmd, args = command_and_args(segments[0]["tokens"])
-        if cmd not in {"node"} or not args or resolve(args[0], cwd) != resolved:
-            ask_or_deny(mode, f"Unusual use of a plugin-cache file: `{' '.join(tokens)[:160]}`")
-        if os.path.basename(resolved) != "codex-companion.mjs":
-            ask_or_deny(mode, f"Running a plugin script other than the Codex companion: {resolved}")
-        trusted.add(tok)
-    return trusted
-
-
 def analyze_bash(command: str, cwd: str, root: str, mode: str) -> None:
     tokens = tokenize(command)
     segments = split_segments(tokens)
-    trusted_plugin_tokens = check_plugin_scripts(tokens, segments, cwd, mode)
 
     # --- privilege escalation & pipe-to-shell ------------------------------
     for idx, seg in enumerate(segments):
@@ -321,8 +282,6 @@ def analyze_bash(command: str, cwd: str, root: str, mode: str) -> None:
         for i, tok in enumerate(toks):
             if i == cmd_index or (i < cmd_index and os.path.basename(tok) in WRAPPER_COMMANDS):
                 continue  # executable path (or wrapper like /usr/bin/env), not data
-            if tok in trusted_plugin_tokens:
-                continue  # validated Codex companion script
             redirect_target = i > 0 and toks[i - 1] in REDIRECT_OPERATORS and not tok.startswith("&")
             # a bare relative redirect target inside the repo is fine; check it anyway for protection
             candidates = path_candidates(tok)

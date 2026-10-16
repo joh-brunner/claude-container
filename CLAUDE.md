@@ -21,8 +21,6 @@ container, the Claude Code sandbox, permission rules, and a PreToolUse hook
 ## Workflow
 - Non-trivial tasks: make a plan first and show it before editing.
 - Implement in small steps and add tests for every behaviour change.
-- Before committing significant changes, get a second opinion with
-  `/codex:review` (Codex review via the Codex plugin).
 - For failing tests, find the root cause before guessing at fixes.
 - Keep commits small with clear messages. Never push; the user pushes.
 

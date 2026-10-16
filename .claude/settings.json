@@ -103,7 +103,6 @@
       "Read(~/.npmrc)",
       "Read(~/.pypirc)",
       "Read(~/.git-credentials)",
-      "Read(~/.codex/auth.json)",
       "Read(~/.claude/.credentials.json)",
       "Edit(./.claude/**)",
       "Edit(./.devcontainer/**)",
@@ -116,11 +115,6 @@
     "failIfUnavailable": true,
     "autoAllowBashIfSandboxed": false,
     "allowUnsandboxedCommands": false,
-    "excludedCommands": [
-      "codex *",
-      "node /home/node/.claude/plugins/cache/*/codex-companion.mjs *",
-      "node \"/home/node/.claude/plugins/cache/*/codex-companion.mjs\" *"
-    ],
     "filesystem": {
       "denyRead": [
         "~/.ssh",
@@ -133,7 +127,6 @@
         "~/.npmrc",
         "~/.pypirc",
         "~/.git-credentials",
-        "~/.codex",
         "~/.claude",
         "./.env",
         "./secrets"
@@ -150,10 +143,6 @@
         },
         {
           "path": "~/.aws",
-          "mode": "deny"
-        },
-        {
-          "path": "~/.codex",
           "mode": "deny"
         },
         {
@@ -217,16 +206,5 @@
         ]
       }
     ]
-  },
-  "extraKnownMarketplaces": {
-    "openai-codex": {
-      "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "codex@openai-codex": true
   }
 }

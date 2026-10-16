@@ -11,18 +11,6 @@ statsig.anthropic.com
 statsig.com
 sentry.io
 
-# --- OpenAI Codex (login + API) ---
-api.openai.com
-auth.openai.com
-chatgpt.com
-
-# --- Plugin marketplace (openai/codex-plugin-cc is fetched from GitHub) ---
-github.com
-api.github.com
-codeload.github.com
-objects.githubusercontent.com
-raw.githubusercontent.com
-
 # --- Package registries (installs still require your approval) ---
 registry.npmjs.org
 pypi.org
