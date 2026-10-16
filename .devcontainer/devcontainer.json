@@ -1,12 +1,16 @@
 {
   "name": "safe-agent-workspace",
+  "initializeCommand": [
+    "bash",
+    "${localWorkspaceFolder}/.devcontainer/initialize.sh",
+    "${localWorkspaceFolder}"
+  ],
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".",
     "args": {
       "CLAUDE_CODE_VERSION": "latest",
-      "TZ": "Europe/Berlin",
-      "SANDBOX_FAIL_CLOSED": "true"
+      "TZ": "Europe/Berlin"
     }
   },
   "runArgs": [
@@ -14,13 +18,18 @@
     "--cap-add=NET_RAW",
     "--memory=8g",
     "--pids-limit=4096",
-    "--hostname=agent-sandbox"
+    "--hostname=agent-container"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
   "mounts": [
     "source=agent-claude-config-${devcontainerId},target=/home/node/.claude,type=volume",
-    "source=agent-history-${devcontainerId},target=/commandhistory,type=volume"
+    "source=agent-history-${devcontainerId},target=/commandhistory,type=volume",
+    "source=${localWorkspaceFolder}/.devcontainer,target=/workspace/.devcontainer,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.vscode,target=/workspace/.vscode,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.git/hooks,target=/workspace/.git/hooks,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.git/config,target=/workspace/.git/config,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.git/modules,target=/workspace/.git/modules,type=bind,readonly"
   ],
   "remoteUser": "node",
   "containerEnv": {

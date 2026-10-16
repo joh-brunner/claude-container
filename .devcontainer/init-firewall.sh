@@ -1,11 +1,11 @@
 #!/bin/bash
 # Default-deny outbound firewall for the agent container.
-# Only domains in /etc/sandbox/allowed-domains.txt (resolved at start) are reachable.
+# Only domains in /etc/agent-firewall/allowed-domains.txt (resolved at start) are reachable.
 # Runs as root via a single sudoers entry; the agent user cannot change it.
 set -euo pipefail
 IFS=$'\n\t'
 
-DOMAINS_FILE="/etc/sandbox/allowed-domains.txt"
+DOMAINS_FILE="/etc/agent-firewall/allowed-domains.txt"
 ALLOW_HOST_NETWORK="${ALLOW_HOST_NETWORK:-false}"
 
 echo "[firewall] configuring default-deny egress..."

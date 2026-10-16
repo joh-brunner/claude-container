@@ -1,20 +1,21 @@
 # safe-agent-workspace
 
-A reusable, locked-down workspace for agentic coding with **Claude Code**.
+A reusable dev container for running **Claude Code** in isolation from your computer.
+
+All protection comes from the container. There are no Claude-specific rules, hooks,
+settings, or instruction files: inside the container Claude behaves like stock Claude Code,
+and the container decides what it can reach.
 
 What you get:
 
-- **A sandbox container** with a default-deny firewall. Only an allowlist of domains is reachable.
-- **Claude Code's OS-level sandbox** inside it. Shell commands can only write to the repo.
-- **Permission rules and a guard hook** that:
-  - ask before any install (packages, tools, software, plugins, MCP servers, images, clones, downloads)
-  - block writes outside the repo
-  - ask before reads outside the repo
-  - protect the guard rails themselves from being edited by Claude
-- **Scripts**: `check-setup.sh` verifies everything, `test-guard.py` tests the hook,
-  and `new-project.sh` starts a new project from this template.
+- **An isolated container.** Only this project folder is shared with your computer.
+  Claude runs as a normal user without root, and the installed tools are read-only.
+- **A default-deny firewall.** Only the domains in `.devcontainer/allowed-domains.txt` are reachable.
+- **Read-only protection for files that can run code on your computer:** `.devcontainer/`,
+  `.vscode/`, `.git/hooks/`, `.git/config`, and `.git/modules/`. Claude can read them but not change them.
+- **Scripts:** `check-setup.sh` verifies the container, and `new-project.sh` starts a new project from this template.
 
-See [docs/SECURITY.md](docs/SECURITY.md) for the security model and its limits.
+See [docs/SECURITY.md](docs/SECURITY.md) for what this protects against and what it doesn't.
 
 ---
 
@@ -24,7 +25,7 @@ See [docs/SECURITY.md](docs/SECURITY.md) for the security model and its limits.
 
 - **Docker Desktop** (or Docker Engine on Linux).
 - **VS Code** with the **Dev Containers** extension (`ms-vscode-remote.remote-containers`).
-- **Git.**
+- **Git** and **bash**. On Windows, use WSL or Git Bash. A setup script runs on your computer before each container start.
 - A **Claude Pro/Max/Team** plan (or Anthropic API key).
 
 Recommended VS Code *user* settings on the host, so your host credentials are not forwarded into the container:
@@ -59,8 +60,7 @@ Tip: on GitHub, mark the repository as a **Template repository**. Each new proje
 claude
 ```
 
-- Log in with your Claude account. The volume keeps the login across rebuilds.
-- When asked, **trust the folder**.
+Log in with your Claude account. The volume keeps the login across rebuilds.
 
 ### 5. Verify
 
@@ -68,66 +68,68 @@ claude
 bash scripts/check-setup.sh
 ```
 
-Every line should show `[ok]`. Inside Claude Code, also run:
+Every line should show `[ok]`. For a live test, ask Claude:
 
-- `/sandbox`: the Config tab shows the resolved sandbox and whether it is active.
-- `/permissions`: shows the allow, ask, and deny rules.
-- `/hooks`: shows the guard hook.
+> Write "hi" to .devcontainer/test.txt, then fetch https://example.com.
 
-Then run a quick live test by asking Claude:
-
-> Install the npm package left-pad, then write "hi" to ~/test.txt, then read /etc/hostname.
-
-You should see a **prompt** for the install, a **block** for the write, and a
-**prompt** for the read.
+Both should fail: the first with `Read-only file system`, the second with a connection error.
 
 ---
 
-## Daily use
+## Workflow for a project
 
-**Stay in the default (manual) permission mode.** The guard hook **denies**
-installs and outside reads in auto mode, because nobody would be asked.
-Bypass mode is disabled entirely.
+1. **Create the project** (on your host):
+   ```bash
+   bash scripts/new-project.sh ../my-project
+   ```
+   Or use "Use this template" on GitHub and clone the result. Each project gets its own
+   container, volumes, and Claude login.
 
-## Starting a new project from this template
+2. **Open it in the container:** `code ../my-project`, then **Reopen in Container**.
+   Before the container starts, `.devcontainer/initialize.sh` runs on your host and creates
+   `.git` and `.vscode` if they're missing, because the read-only mounts need them.
 
-On your host:
+3. **Work with Claude** in the container terminal: `claude`.
+   - By default Claude Code asks before running commands and editing files. That is
+     Claude Code's normal behaviour, not something this repo adds.
+   - Because the container is the boundary, you can choose to skip the prompts with
+     `claude --dangerously-skip-permissions`. Claude can then do anything *inside the container*
+     without asking. Read [docs/SECURITY.md](docs/SECURITY.md) first.
+   - If you want Claude to follow project conventions, you can add a `CLAUDE.md`. It is
+     guidance for Claude, not a security control.
 
-```bash
-bash scripts/new-project.sh ../my-next-project
-code ../my-next-project   # then "Reopen in Container"
-```
+4. **Install dependencies inside the container**, into the project (`npm install`, a `.venv`).
+   npm and PyPI are reachable. System tools and other languages go in the `Dockerfile`; edit it on your host and rebuild.
 
-Each project gets its own container, volumes, and Claude login.
-The `${devcontainerId}` in the volume names keeps them separate.
+5. **Commit inside the container, push from your host.** Claude can commit. Before pushing,
+   review what's new on your host:
+   ```bash
+   git log -p origin/main..
+   ```
+   This review is your checkpoint: anything Claude wrote leaves the container when you push it,
+   or when you run it on your host.
 
-Then edit the "Project notes" section of `CLAUDE.md` with the stack and commands.
+6. **Change protected files on your host**, outside the container: `.devcontainer/`, `.vscode/`,
+   git config (`git remote add`, `git push -u`, ...). Then rebuild or restart the container.
 
-## Customizing (do this yourself; Claude is blocked from editing these files)
+## Customizing (edit on your host)
 
 | Want to... | Edit | Then |
 |---|---|---|
-| Reach another domain | `.devcontainer/allowed-domains.txt`, plus `sandbox.network.allowedDomains` in `.claude/settings.json` if Bash needs it | Rebuild container |
-| Allow a harmless command without prompts | `permissions.allow` in `.claude/settings.local.json` (personal) or `settings.json` (shared) | Restart `claude` |
-| Fewer Bash prompts | Set `"autoAllowBashIfSandboxed": true` in `.claude/settings.local.json`. Sandboxed commands then run without prompts, while installs, outside reads, and blocked writes still get stopped by the hook | Restart `claude` |
-| Add a language toolchain (Go, Rust, ...) | Add it to the `Dockerfile` | Rebuild container |
-
-## Running without the container (host mode)
-
-Everything in `.claude/` also works when you run `claude` directly on macOS, Linux, or WSL2.
-The sandbox then uses Seatbelt (macOS) or bubblewrap (Linux; install `bubblewrap` and `socat`).
-You lose the firewall, the read-only toolchain, the locked managed settings, and the
-home-directory read fence, so **the container is the recommended mode**.
+| Reach another domain | `.devcontainer/allowed-domains.txt` | Rebuild container |
+| Add a language toolchain (Go, Rust, ...) | `.devcontainer/Dockerfile` | Rebuild container |
+| Protect another path | Add a `readonly` bind mount in `.devcontainer/devcontainer.json`, and create the path in `.devcontainer/initialize.sh` | Rebuild container |
+| Reach services on your computer (e.g. a database) | Set `ALLOW_HOST_NETWORK` to `true` in `devcontainer.json` | Rebuild container |
 
 ## Troubleshooting
 
-- **Claude refuses to start with a sandbox error inside the container.** Bubblewrap could not
-  start in your Docker setup. Set `"SANDBOX_FAIL_CLOSED": "false"` in
-  `devcontainer.json` build args and rebuild. The container and firewall remain the boundary.
-  Run `/sandbox` for details.
-- **A package install was approved but fails with a network error.** Add the registry
-  to both allowlists (see Customizing) and rebuild.
+- **The container fails to start with "bind source path does not exist".** `initialize.sh` didn't run on
+  your host (for example, Windows without bash). Run `git init` and `mkdir .vscode` in the project
+  folder yourself, then try again.
+- **Git in the container says it could not lock `.git/config`.** Expected: the config is read-only.
+  Run that git command on your host.
+- **Git config changes on the host don't show up in the container.** `.git/config` is mounted as a
+  single file, and git replaces the file when it writes it. Restart the container.
+- **A package install fails with a network error.** The registry isn't in `allowed-domains.txt`. Add it and rebuild.
 - **The firewall fails on start.** A domain may have changed its IPs or be unreachable.
   Rebuild, or check your network or VPN.
-- **"Yes, and don't ask again" doesn't save.** Run `claude doctor` and follow its advice on
-  stale sandbox mask files.
