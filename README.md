@@ -1,6 +1,7 @@
 # Claude container
 
 A dev container for running **Claude Code** isolated from your computer, set up for Python projects.
+There are no Claude-specific controls used (no permission rules, hooks, command isolation, or instruction files).
 
 > **In short:** this repo is just a `.devcontainer/` folder. Copy it into the top level of a project,
 > open the project in VS Code, choose **Reopen in Container**, and work with the **Claude Code extension**
@@ -82,12 +83,11 @@ your_project/
 1. **Open the project folder itself** in VS Code (`code ~/Claude/test-project`) and click
    **Reopen in Container**. The first start may take a few minutes.
 
-2. **Check that you are inside** before starting Claude. In a normal window, Claude runs on your computer
-   without limits.
+2. **Check that you are inside** before starting Claude.
    - Bottom-left corner: **"Dev Container: safe-agent-workspace"**
    - Terminal prompt: **`dev@agent-container:/workspace$`**
 
-3. **Work with Claude** in the Claude Code panel or with `claude` in the terminal.
+3. **Work with Claude** in the Claude Code panel of the VS extension or with `claude` in the terminal.
    - Add Python packages with `uv add`. Projects with a `pyproject.toml` get `.venv/` installed on every start.
    - **Use git locally inside the container** as often as you like: `git status`, `git diff`, `git add`,
      `git commit`, branches, and so on all work.

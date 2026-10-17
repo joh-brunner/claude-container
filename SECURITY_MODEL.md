@@ -2,7 +2,7 @@
 
 This workspace has **one security boundary: the dev container**, together with its firewall.
 There are no Claude-specific controls (no permission rules, hooks, command isolation, or instruction files).
-Everything below is enforced by Docker and the Linux kernel, so it holds no matter what
+Everything below is enforced by Docker and the Linux kernel, so it (hopefully) holds no matter what
 Claude, a package, or a prompt injection tries.
 
 ```
@@ -32,9 +32,9 @@ Claude, a package, or a prompt injection tries.
 | No system-wide changes | No general `sudo`; global tools in `/usr/local` are root-owned. |
 | No code execution on your computer through config files | These paths are mounted read-only, because files there can run code on your computer: |
 
-The read-only paths:
+The **read-only** paths:
 
-| Path | Why it is dangerous |
+| Path | Why it is dangerous with **write** |
 |---|---|
 | `.git/hooks/` | Hook scripts run on your computer when you commit, push, or check out from your host. |
 | `.git/config` | `core.hooksPath` can point hooks somewhere writable; `core.fsmonitor` runs a command on every `git status`. |
