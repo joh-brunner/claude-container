@@ -38,7 +38,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   domain="${line%%#*}"
   domain="$(echo "$domain" | tr -d '[:space:]')"
   [ -z "$domain" ] && continue
-  ips=$(dig +short A "$domain" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || true)
+  # Use the system resolver (like the programs that later connect), not dig: some home routers
+  # answer dig's EDNS queries with malformed packets, which would leave the allowlist empty.
+  ips=$(getent ahostsv4 "$domain" | awk '{print $1}' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u || true)
   if [ -z "$ips" ]; then
     echo "[firewall] WARNING: could not resolve $domain (skipped)"
     continue
