@@ -25,3 +25,10 @@ fi
 
 mkdir -p .git/hooks .git/modules .vscode
 touch .git/config
+
+# Keep the container setup and its caches out of git. .git/info/exclude works like .gitignore,
+# but stays local: it is never committed and doesn't change the project's files.
+mkdir -p .git/info
+for p in .devcontainer/ .cache/; do
+  grep -qxF "$p" .git/info/exclude 2>/dev/null || echo "$p" >> .git/info/exclude
+done
