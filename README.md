@@ -1,4 +1,4 @@
-# safe-agent-workspace
+# Claude container
 
 A dev container for running **Claude Code** isolated from your computer, set up for Python projects.
 
@@ -10,13 +10,28 @@ A dev container for running **Claude Code** isolated from your computer, set up 
 your_project/
 ├── .devcontainer/     ← copied from this repo: the only thing a project needs
 ├── pyproject.toml     ← optional python env: installed automatically with uv in your container
-└── ...
+└── ...your project folders and files...
 ```
 
 Nothing needs to be built beforehand; VS Code builds the container the first time you open the project.
 **You never have to open this repo itself in a container.**
 
 **What the container enforces:**
+
+```
+┌─ Your computer ────────────────────────────────────────┐
+│                                                        │
+│  ┌─ Container ──────────────────────────────────────┐  │
+│  │  Claude Code, Python, uv (no root)               │  │
+│  │                                                  │  │
+│  │  /workspace = your project folder                │  │
+│  │    (the only folder shared with your computer)   │  │
+│  │    read-only: .devcontainer/ .vscode/ .git/      │  │
+│  └─────────────────────────┬────────────────────────┘  │
+│                            │ firewall                  │
+└────────────────────────────┼───────────────────────────┘
+                             ▼ only the Claude API and PyPI
+```
 
 - Only the project folder is shared with your computer. Claude runs without root; installed tools are read-only.
 - A default-deny firewall: only the domains in `.devcontainer/allowed-domains.txt` are reachable (Claude, PyPI).
@@ -31,10 +46,11 @@ See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and wh
 
 ## One-time setup (outside the container)
 
-1. **Install** Docker, VS Code with the **Dev Containers** extension, and bash (Windows: WSL).
-   Git is optional but recommended (see [Good to know](#good-to-know)). You need a Claude Pro/Max/Team plan or API key.
+1. **Install** Docker (e.g. [through apt](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)), VS Code with the **Dev Containers** extension, and bash (Windows: WSL).
+   Git is optional but recommended (see [Good to know](#good-to-know)). 
+   **You need a Claude Pro/Max/Team plan or API key**.
 
-2. **Linux (Docker Engine):** add your user to the `docker` group, then restart.
+2. **Linux (Docker Engine):** add your user to the `docker` group, then **restart**.
    Otherwise opening the container fails with `permission denied ... docker.sock`.
 
    ```bash
@@ -49,17 +65,22 @@ See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and wh
    "dev.containers.gitCredentialHelperConfigLocation": "none"
    ```
 
-4. **Clone this repo**, e.g. to `~/Claude/AI_SETUP`.
+4. **Clone this repo for the `.devcontainer/`**, e.g. to `~/Claude/AI_SETUP`.
 
-## For each project (first time, outside the container)
+## For each new project (first time, outside the container)
 
-1. **Copy `.devcontainer/` into the project.** 
+1. **Copy `.devcontainer/` into your project on top-level.** 
+```
+your_project/
+├── .devcontainer/     ← copied from this repo: the only thing a project needs
+├── pyproject.toml     ← optional python env: installed automatically with uv in your container
+└── ...your project folders and files...
+```
 
 ## Every time (inside the container, except steps 1 and 4)
 
 1. **Open the project folder itself** in VS Code (`code ~/Claude/test-project`) and click
-   **Reopen in Container**. The first start takes a few minutes.
-   If VS Code offers to *add* a dev container config, you opened the wrong folder; don't accept.
+   **Reopen in Container**. The first start may take a few minutes.
 
 2. **Check that you are inside** before starting Claude. In a normal window, Claude runs on your computer
    without limits.
