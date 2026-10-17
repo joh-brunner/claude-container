@@ -11,8 +11,7 @@ statsig.anthropic.com
 statsig.com
 sentry.io
 
-# --- Package registries (installs still require your approval) ---
-registry.npmjs.org
+# --- Python package index (installs still require your approval) ---
 pypi.org
 files.pythonhosted.org
 

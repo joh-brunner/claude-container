@@ -53,17 +53,17 @@ The read-only paths:
 
 1. **Inside the container, Claude can do anything.** It can read every file in the project,
    including `.env` and other secrets, change or delete files outside the read-only paths,
-   and install packages from npm and PyPI. Commit often: uncommitted work can be lost.
+   and install packages from PyPI. Commit often: uncommitted work can be lost.
 2. **Data can leave through allowed domains.** The firewall can't tell Claude Code apart from
    the commands it runs. A malicious command could send project files to `api.anthropic.com`
-   using someone else's API key, or publish them to npm or PyPI. DNS (port 53) is also open,
+   using someone else's API key, or publish them to PyPI. DNS (port 53) is also open,
    which allows slow leaks through DNS lookups.
-3. **Your Claude login can be stolen.** It is stored in the container (`/home/node/.claude`),
+3. **Your Claude login can be stolen.** It is stored in the container (`/home/dev/.claude`),
    so any command can read it and send it out through an allowed domain. If you suspect
    this happened, log out of all sessions in your Claude account settings.
 4. **Code you run on your computer from the project.** The container only protects your computer
    while the code stays inside it. Anything Claude wrote runs on your computer if you run it there:
-   `npm` scripts, `Makefile`s, tests, `.envrc` (direnv), and so on. CI workflows (`.github/workflows/`)
+   Python scripts, `Makefile`s, tests, `.envrc` (direnv), and so on. CI workflows (`.github/workflows/`)
    run on GitHub with your repository's secrets when you push. Review changes before you run or push them.
 5. **The firewall works on IP addresses.** Domains are resolved once, at container start. Other
    sites that share those IPs (for example on the same CDN) are reachable too.
@@ -74,7 +74,7 @@ The read-only paths:
 ## Optional extra hardening
 
 - **Limit DNS** to Docker's resolver (`127.0.0.11`) in `init-firewall.sh`, to close DNS leaks.
-- **Remove npm and PyPI** from `allowed-domains.txt` if you don't install packages in the container.
+- **Remove PyPI** from `allowed-domains.txt` if you don't install packages in the container.
   Put dependencies in the `Dockerfile` instead; the image build is not firewalled.
 - **Make more paths read-only**, for example `.github/` (see "Protect another path" in the README).
 - **Pin `CLAUDE_CODE_VERSION`** in `devcontainer.json` and update deliberately. Auto-update is disabled.
