@@ -37,13 +37,6 @@ Nothing needs to be built beforehand; VS Code builds the container the first tim
                              ▼ only the Claude API and PyPI
 ```
 
-- Only the project folder is shared with your computer. Claude runs without root; installed tools are read-only.
-- A default-deny firewall: only the domains in `.devcontainer/allowed-domains.txt` are reachable (Claude, PyPI).
-- Files that could run code on your computer are read-only inside: `.devcontainer/`, `.vscode/`,
-  `.git/hooks/`, `.git/config`, `.git/modules/`.
-- Your git credentials stay on your computer (with the VS Code settings below). SSH keys never enter the
-  container, but VS Code may forward your SSH agent (see [Good to know](#good-to-know)).
-
 See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and what it doesn't.
 
 ---
