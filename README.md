@@ -1,5 +1,9 @@
 # Claude container
 
+>⚠️
+>Please test this setup locally first, if it works well we can ask IT for a similar solution on the servers! 
+>⚠️
+
 A dev container for running **Claude Code** isolated from your computer, set up for Python projects.
 There are no Claude-specific controls used (no permission rules, hooks, command isolation, or instruction files).
 
