@@ -76,7 +76,7 @@ The read-only paths:
 - **Limit DNS** to Docker's resolver (`127.0.0.11`) in `init-firewall.sh`, to close DNS leaks.
 - **Remove PyPI** from `allowed-domains.txt` if you don't install packages in the container.
   Put dependencies in the `Dockerfile` instead; the image build is not firewalled.
-- **Make more paths read-only**, for example `.github/` (see "Protect another path" in the README).
+- **Make more paths read-only**, for example `.github/` (add a `readonly` bind mount in `devcontainer.json` and create the path in `initialize.sh`).
 - **Pin `CLAUDE_CODE_VERSION`** in `devcontainer.json` and update deliberately. Auto-update is disabled.
 - **Use a separate Docker context or VM** (for example Docker Desktop with enhanced container
   isolation) for untrusted repositories.
