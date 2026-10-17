@@ -22,7 +22,8 @@ Nothing needs to be built beforehand; VS Code builds the container the first tim
 - A default-deny firewall: only the domains in `.devcontainer/allowed-domains.txt` are reachable (Claude, PyPI).
 - Files that could run code on your computer are read-only inside: `.devcontainer/`, `.vscode/`,
   `.git/hooks/`, `.git/config`, `.git/modules/`.
-- Your git credentials and SSH keys stay on your computer (with the VS Code settings below).
+- Your git credentials stay on your computer (with the VS Code settings below). SSH keys never enter the
+  container, but VS Code may forward your SSH agent (see [Good to know](#good-to-know)).
 
 See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and what it doesn't.
 
@@ -93,13 +94,17 @@ See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and wh
   computer don't. Set your name inside the container with `git config --global user.name/user.email`.
 - **The `.git/` folder appears even if you never use git.** It must exist so it can be mounted read-only;
   otherwise Claude could create a repository with hooks that would run on your computer.
+- **SSH agent:** if your desktop runs an SSH agent, VS Code forwards it into the container, and there is no
+  setting to turn that off. The start log then shows `[warn] SSH agent forwarded`. Programs in the container
+  could ask the agent to *use* your keys (not copy them); the firewall blocks SSH connections, which limits
+  this. To avoid it, close all VS Code windows and start it with `env -u SSH_AUTH_SOCK code <project>`.
 - **VS Code extension:** it runs inside the container. In the Extensions view it should be listed under
   *"Dev Container: safe-agent-workspace – Installed"*. Each project has its own container and login.
 
 ## Troubleshooting
 
-- **The start fails with "setup check failed":** the log shows which check failed. A forwarded git credential
-  helper or SSH agent means the VS Code settings above are missing, or `ForwardAgent` is on.
+- **The start fails with "setup check failed":** the log shows which check failed. A forwarded git
+  credential helper means the VS Code settings above are missing.
 - **`permission denied` on the Docker socket:** you're not in the `docker` group, or haven't logged out and back in.
 - **"Bind source path does not exist":** `initialize.sh` didn't run on your computer (e.g. no bash).
   Create `.git/` and `.vscode/` in the project yourself.

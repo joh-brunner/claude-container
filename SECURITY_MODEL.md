@@ -27,7 +27,7 @@ Claude, a package, or a prompt injection tries.
 | Protection | How |
 |---|---|
 | Your computer's files are out of reach | Only the project folder is mounted. Everything else Claude sees is the container's own file system. |
-| Your credentials are out of reach | SSH keys, git credentials, and cloud logins stay on your computer (see the VS Code settings in the README). |
+| Your credentials are out of reach | SSH keys, git credentials, and cloud logins stay on your computer (see the VS Code settings in the README). Exception: VS Code forwards a running SSH agent (see below). |
 | Network limited to an allowlist | `init-firewall.sh` sets `iptables` default-deny and allows only the IPs of the domains in `allowed-domains.txt`. IPv6 is blocked. The agent user can't change the rules. |
 | No system-wide changes | No general `sudo`; global tools in `/usr/local` are root-owned. |
 | No code execution on your computer through config files | These paths are mounted read-only, because files there can run code on your computer: |
@@ -68,7 +68,10 @@ The read-only paths:
 5. **The firewall works on IP addresses.** Domains are resolved once, at container start. Other
    sites that share those IPs (for example on the same CDN) are reachable too.
 6. **VS Code** has access to the container and can forward ports, credentials, and SSH agents.
-   Use the host settings in the README to limit credential forwarding.
+   Use the host settings in the README to limit credential forwarding. A running SSH agent on your computer
+   is forwarded with no setting to disable it: programs in the container can then use (not copy) your SSH
+   keys. The firewall blocks SSH connections, and the start log warns about it. Start VS Code with
+   `env -u SSH_AUTH_SOCK code` to avoid it.
 7. **MCP servers and plugins** you add run inside the container with the same access as Claude.
 
 ## Optional extra hardening

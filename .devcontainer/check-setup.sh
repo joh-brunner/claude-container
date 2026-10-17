@@ -3,6 +3,7 @@
 set -uo pipefail
 pass() { echo "  [ok]   $1"; }
 fail() { echo "  [FAIL] $1"; FAILED=1; }
+warn() { echo "  [warn] $1"; }
 FAILED=0
 cd "$(dirname "$0")/.."
 
@@ -22,7 +23,10 @@ curl --connect-timeout 8 -s -o /dev/null https://api.anthropic.com && pass "api.
 
 echo "Credentials (should stay on your host)"
 [ -z "$(git config --global --get-all credential.helper 2>/dev/null)" ] && pass "no git credential helper" || fail "git credential helper set (check VS Code host settings)"
-[ -z "${SSH_AUTH_SOCK:-}" ] && pass "no SSH agent forwarded" || fail "SSH agent forwarded (SSH_AUTH_SOCK is set)"
+# VS Code forwards your SSH agent whenever it was started with SSH_AUTH_SOCK set, with no setting to
+# turn it off. Programs here could then use (not copy) your SSH keys; the firewall blocks SSH itself.
+[ -z "${SSH_AUTH_SOCK:-}" ] && pass "no SSH agent forwarded" \
+  || warn "SSH agent forwarded by VS Code: your SSH keys can be used (not copied) from here"
 
 echo "Read-only paths (files that can run code on your host)"
 for p in .devcontainer .vscode .git/hooks .git/config .git/modules; do
