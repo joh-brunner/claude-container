@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify the container's protections. Run inside the container: bash scripts/check-setup.sh
+# Verify the container's protections. Run inside the container: bash .devcontainer/check-setup.sh
 set -uo pipefail
 pass() { echo "  [ok]   $1"; }
 fail() { echo "  [FAIL] $1"; FAILED=1; }
@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 
 echo "Tools"
 command -v claude >/dev/null && pass "claude $(claude --version 2>/dev/null | head -1)" || fail "claude not found"
+command -v uv >/dev/null && pass "$(uv --version)" || fail "uv not found"
 
 echo "Container"
 [ -d /workspace ] && pass "running in the dev container" || fail "/workspace missing (not in container?)"
@@ -18,6 +19,10 @@ touch /etc/write-test 2>/dev/null && fail "/etc writable" || pass "/etc not writ
 echo "Network"
 if curl --connect-timeout 5 -s https://example.com >/dev/null 2>&1; then fail "example.com reachable (firewall off?)"; else pass "example.com blocked"; fi
 curl --connect-timeout 8 -s -o /dev/null https://api.anthropic.com && pass "api.anthropic.com reachable" || fail "api.anthropic.com blocked"
+
+echo "Credentials (should stay on your host)"
+[ -z "$(git config --global --get-all credential.helper 2>/dev/null)" ] && pass "no git credential helper" || fail "git credential helper set (check VS Code host settings)"
+[ -z "${SSH_AUTH_SOCK:-}" ] && pass "no SSH agent forwarded" || fail "SSH agent forwarded (SSH_AUTH_SOCK is set)"
 
 echo "Read-only paths (files that can run code on your host)"
 for p in .devcontainer .vscode .git/hooks .git/config .git/modules; do

@@ -10,14 +10,12 @@ mkdir -p /workspace/.cache/pip /workspace/.cache/uv
 # Git: trust the mounted repo (it is created on the host by initialize.sh)
 git config --global --add safe.directory /workspace
 
-chmod +x scripts/*.sh 2>/dev/null || true
-
 cat <<'EOF'
 
 ============================================================
- Container ready. Next steps (inside this container):
+ Container ready.
 
-   1. claude            -> log in and trust the folder
-   2. Verify:           bash scripts/check-setup.sh
+   Open the Claude Code panel and log in.
+   (The setup is checked automatically on every start.)
 ============================================================
 EOF
