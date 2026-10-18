@@ -3,7 +3,7 @@
 > [!WARNING]
 > Please test this setup locally first, if it works well we can ask IT for a similar solution on the servers! 
 
-A dev container for running **Claude Code** isolated from your computer, set up for Python projects.
+A dev container for running **Claude Code** projects with **VS Code** isolated from your computer.
 There are no Claude-specific controls used (no permission rules, hooks, command isolation, or instruction files).
 
 > **In short:** this repo is just a `.devcontainer/` folder. Copy it into the top level of a project,
@@ -13,11 +13,12 @@ There are no Claude-specific controls used (no permission rules, hooks, command 
 ```
 your_project/
 ├── .devcontainer/     ← copied from this repo: the only thing a project needs
-├── pyproject.toml     ← optional python env: installed automatically with uv in your container
+├── pyproject.toml     ← optional (Python projects): dependencies installed automatically with uv
 └── ...your project folders and files...
 ```
 
 Nothing needs to be built beforehand; VS Code builds the container the first time you open the project.
+Python 3.12 and uv are preinstalled for Python projects. They are optional: other projects simply don't use them.
 **You never have to open this repo itself in a container.**
 
 **What the container enforces:**
@@ -26,7 +27,8 @@ Nothing needs to be built beforehand; VS Code builds the container the first tim
 ┌─ Your computer ────────────────────────────────────────┐
 │                                                        │
 │  ┌─ Container ──────────────────────────────────────┐  │
-│  │  Claude Code, Python, uv (no root)               │  │
+│  │  Claude Code, runs without root                  │  │
+│  │  optional: Python 3.12, uv                       │  │
 │  │                                                  │  │
 │  │  /workspace = your project folder                │  │
 │  │    (the only folder shared with your computer)   │  │
@@ -34,7 +36,7 @@ Nothing needs to be built beforehand; VS Code builds the container the first tim
 │  └─────────────────────────┬────────────────────────┘  │
 │                            │ firewall                  │
 └────────────────────────────┼───────────────────────────┘
-                             ▼ only the Claude API and PyPI
+                             ▼ only the Claude API (and PyPI, for Python projects)
 ```
 
 See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and what it doesn't.
@@ -70,7 +72,7 @@ See [SECURITY_MODEL.md](SECURITY_MODEL.md) for what this protects against and wh
 ```
 your_project/
 ├── .devcontainer/     ← copied from this repo: the only thing a project needs
-├── pyproject.toml     ← optional python env: installed automatically with uv in your container
+├── pyproject.toml     ← optional (Python projects): dependencies installed automatically with uv
 └── ...your project folders and files...
 ```
 
@@ -84,7 +86,8 @@ your_project/
    - Terminal prompt: **`dev@agent-container:/workspace$`**
 
 3. **Work with Claude** in the Claude Code panel of the VS extension or with `claude` in the terminal.
-   - Add Python packages with `uv add`. Projects with a `pyproject.toml` get `.venv/` installed on every start.
+   - *Optional, Python projects:* add packages with `uv add`. Projects with a `pyproject.toml` get `.venv/`
+     installed on every start.
    - **Use git locally inside the container** as often as you like: `git status`, `git diff`, `git add`,
      `git commit`, branches, and so on all work.
 
@@ -103,7 +106,7 @@ your_project/
 
 - **Changing protected files:** edit `.devcontainer/`, `.vscode/`, or git config (e.g. `git remote add`)
   on your computer, then rebuild or restart the container.
-- **Customizing:** add domains in `allowed-domains.txt`, tools or other Python versions in the `Dockerfile`,
+- **Customizing:** add domains in `allowed-domains.txt`, tools (or, for Python projects, another Python version) in the `Dockerfile`,
   then run **Dev Containers: Rebuild Container**. Projects have their own copy of `.devcontainer/`;
   copy it again to get updates from this repo.
 - **Without git on your computer:** the container creates the repository itself, and all local git
